@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live AI News Dashboard - Running, Pop Culture & Global AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #38bdf8;
+            --secondary: #0f172a;
+            --accent: #06b6d4;
+            --bg-dark: #0f172a;
+            --bg-surface: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border-color: rgba(148, 163, 184, 0.2);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 24px 20px;
+            sticky: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .refresh-time {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: rgba(56, 189, 248, 0.1);
+            border-radius: 6px;
+        }
+
+        .refresh-btn {
+            padding: 8px 16px;
+            background: var(--primary);
+            color: var(--secondary);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: var(--secondary);
+            border-color: var(--primary);
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .search-box {
+            padding: 10px 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            width: 250px;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .news-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .news-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 24px rgba(56, 189, 248, 0.15);
+        }
+
+        .news-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+
+        .news-source {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .news-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .news-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            color: var(--text-primary);
+        }
+
+        .news-summary {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        .news-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent);
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .news-link {
+            display: inline-block;
+            padding: 8px 12px;
+            background: var(--primary);
+            color: var(--secondary);
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            align-self: flex-start;
+        }
+
+        .news-link:hover {
+            background: var(--accent);
+            transform: translateX(2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(56, 189, 248, 0.2);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .header-title {
+                font-size: 20px;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1 class="header-title">🚀 Live AI News Dashboard</h1>
+            <p class="header-subtitle">Real-time AI updates from Running, Sports, Pop Culture & Global Markets</p>
+            <div class="header-controls">
+                <div class="refresh-time">
+                    ⏱️ Last updated: <span id="updateTime">just now</span>
+                </div>
+                <button class="refresh-btn" onclick="refreshNews()">🔄 Refresh Now</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-label">Total Articles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="runningCount">0</div>
+                <div class="stat-label">Running & Sport</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="popCount">0</div>
+                <div class="stat-label">Pop Culture</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="generalCount">0</div>
+                <div class="stat-label">General AI</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterNews('all')">All News</button>
+            <button class="filter-btn" onclick="filterNews('running')">🏃 Running & Sport</button>
+            <button class="filter-btn" onclick="filterNews('pop-culture')">🎬 Pop Culture</button>
+            <button class="filter-btn" onclick="filterNews('general')">🌐 General AI</button>
+            <input type="text" class="search-box" id="searchBox" placeholder="Search articles..." onkeyup="searchNews()">
+        </div>
+
+        <div id="newsGrid" class="news-grid"></div>
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">🔍</div>
+            <p>No articles match your search. Try a different filter.</p>
+        </div>
+    </div>
+
+    <script>
+        let allNews = [];
+        let currentFilter = 'all';
+        let currentSearch = '';
+
+        const newsData = [
+            {
+                id: 1,
+                title: "2026 World Cup to Feature AI-Generated Player Digital Avatars",
+                summary: "FIFA partners with Lenovo and Globant to create realistic 3D replicas of every player for enhanced offside detection and fan experience during the 2026 World Cup.",
+                source: "Tech Informed",
+                category: "running",
+                tags: ["World Cup", "FIFA", "3D Avatar", "Officiating"],
+                publishedAt: "2026-01-27T14:30:00Z",
+                url: "https://techinformed.com/how-ai-is-reshaping-global-sport/"
+            },
+            {
+                id: 2,
+                title: "Formula 1 Leverages AI for Real-Time Data Processing at Record Scale",
+                summary: "F1 teams process hundreds of terabytes of data each race weekend using high-performance AI systems to gain competitive advantages and optimize vehicle performance.",
+                source: "City AM",
+                category: "running",
+                tags: ["Formula 1", "Real-time Analytics", "Performance Optimization"],
+                publishedAt: "2026-01-25T11:15:00Z",
+                url: "https://www.cityam.com/why-2026-will-be-the-year-of-technology-and-ai-in-sport/"
+            },
+            {
+                id: 3,
+                title: "AI-Powered Injury Prediction Reduces Soccer Injuries by 60%",
+                summary: "Professional soccer clubs using Catapult Sports AI wearables report dramatic injury reductions through real-time fatigue and overtraining risk detection.",
+                source: "AI World Today",
+                category: "running",
+                tags: ["Injury Prevention", "Wearables", "Soccer", "Performance Analytics"],
+                publishedAt: "2026-01-20T09:45:00Z",
+                url: "https://www.aiworldtoday.net/p/the-ai-sporting-edge-top-10-ai-innovations"
+            },
+            {
+                id: 4,
+                title: "Synthetic Celebrities and AI Idols Set to Dominate Entertainment in 2026",
+                summary: "AI-generated performers like Lil Miquela and upcoming synthetic talent are expected to pursue careers in acting and modeling, raising questions about creative authenticity.",
+                source: "Forbes",
+                category: "pop-culture",
+                tags: ["Synthetic Celebrities", "Generative AI", "Entertainment", "Digital Performers"],
+                publishedAt: "2026-01-18T16:20:00Z",
+                url: "https://www.forbes.com/sites/bernardmarr/2025/12/10/7-media-trends-that-will-redefine-entertainment-in-2026/"
+            },
+            {
+                id: 5,
+                title: "Netflix Uses Generative Video AI in 'El Eternauta' Production",
+                summary: "Netflix integrates AI-generated video for supplementary scenes and effects in prime-time programming, signaling a shift in how streaming platforms approach content creation.",
+                source: "Boardroom",
+                category: "pop-culture",
+                tags: ["Generative Video", "Netflix", "Production", "AI Integration"],
+                publishedAt: "2026-01-15T13:00:00Z",
+                url: "https://boardroom.tv/entertainment-pop-culture-predictions-2026/"
+            },
+            {
+                id: 6,
+                title: "Hollywood Debates AI-Generated Dialogue and Deepfake Concerns",
+                summary: "Industry leaders and creatives grapple with ethical boundaries as AI tools for scriptwriting and video synthesis become more sophisticated and accessible.",
+                source: "New York Times",
+                category: "pop-culture",
+                tags: ["Deepfakes", "Scriptwriting", "Ethics", "Content Creation"],
+                publishedAt: "2026-01-18T10:30:00Z",
+                url: "https://www.nytimes.com/2026/01/18/podcasts/the-daily/the-sunday-daily-hollywoods-ai-moment.html"
+            },
+            {
+                id: 7,
+                title: "Google DeepMind Advances AI for DNA Analysis and Healthcare",
+                summary: "New AI models from Google DeepMind demonstrate unprecedented capability to interpret DNA sequences, potentially transforming medical diagnostics and genomic research.",
+                source: "BBC",
+                category: "general",
+                tags: ["DeepMind", "DNA", "Healthcare", "Genomics"],
+                publishedAt: "2026-01-28T08:15:00Z",
+                url: "https://www.bbc.co.uk/news/articles/c39428dv18yo"
+            },
+            {
+                id: 8,
+                title: "Anthropic Launches Claude for Healthcare with HIPAA Compliance",
+                summary: "Claude's expanded capabilities now support regulated healthcare environments, enabling medical database integration and safe enterprise AI deployment in life sciences.",
+                source: "AI Insights",
+                category: "general",
+                tags: ["Claude", "Healthcare", "HIPAA", "Enterprise AI"],
+                publishedAt: "2026-01-23T14:45:00Z",
+                url: "https://www.riskinfo.ai/post/ai-insights-key-global-developments-in-january-2026"
+            },
+            {
+                id: 9,
+                title: "OpenAI & SoftBank Sign 1.2 GW Data Center Lease for AI Infrastructure",
+                summary: "OpenAI secures massive compute capacity in Texas as part of SoftBank's Stargate initiative, cementing infrastructure investment as a strategic priority for AGI development.",
+                source: "Risk Info",
+                category: "general",
+                tags: ["Infrastructure", "Data Centers", "Compute", "Energy"],
+                publishedAt: "2026-01-22T11:20:00Z",
+                url: "https://www.riskinfo.ai/post/ai-insights-key-global-developments-in-january-2026"
+            },
+            {
+                id: 10,
+                title: "2026 Winter Olympics to Use AI for Interactive Viewing & Predictive Simulations",
+                summary: "Olympic organizers deploy AI-powered predictive models and personalized viewing layers to enhance fan engagement and provide dynamic storytelling during Milano Cortina 2026.",
+                source: "Two Birds",
+                category: "running",
+                tags: ["Winter Olympics", "AI Analytics", "Fan Experience", "Broadcasting"],
+                publishedAt: "2026-01-19T15:50:00Z",
+                url: "https://www.twobirds.com/en/insights/2026/innovation-in-sport-ai-in-the-sports-fans-and-business-ecosystem--ahead-of-the-game-sp"
+            },
+            {
+                id: 11,
+                title: "AI Wearables Revolutionize Runner Training Plans with Personalization",
+                summary: "Advanced AI wearables now analyze individual biometric data to create hyper-personalized training regimens for endurance athletes, improving performance and preventing injuries.",
+                source: "AI World Today",
+                category: "running",
+                tags: ["Wearables", "Training", "Personalization", "Running"],
+                publishedAt: "2026-01-21T12:30:00Z",
+                url: "https://www.aiworldtoday.net/p/the-ai-sporting-edge-top-10-ai-innovations"
+            },
+            {
+                id: 12,
+                title: "UK Government Upgrades AI Supercomputer 'Dawn' to 'Zenith' with £36M Investment",
+                summary: "Britain invests in advanced AI computing infrastructure to accelerate medical diagnostics, climate modeling, and public sector transformation across healthcare and research.",
+                source: "BBC",
+                category: "general",
+                tags: ["UK Supercomputer", "Research", "Public Sector", "AI Infrastructure"],
+                publishedAt: "2026-01-27T09:00:00Z",
+                url: "https://www.bbc.co.uk/news/articles/c79rjg3yqn3o"
+            }
+        ];
+
+        function initDashboard() {
+            allNews = newsData;
+            updateStats();
+            displayNews(allNews);
+            updateTime();
+        }
+
+        function updateStats() {
+            const total = allNews.length;
+            const running = allNews.filter(n => n.category === 'running').length;
+            const pop = allNews.filter(n => n.category === 'pop-culture').length;
+            const general = allNews.filter(n => n.category === 'general').length;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('runningCount').textContent = running;
+            document.getElementById('popCount').textContent = pop;
+            document.getElementById('generalCount').textContent = general;
+        }
+
+        function displayNews(newsArray) {
+            const grid = document.getElementById('newsGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (newsArray.length === 0) {
+                grid.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            grid.style.display = 'grid';
+            emptyState.style.display = 'none';
+            grid.innerHTML = newsArray.map(news => `
+                <div class="news-card">
+                    <div class="news-card-header">
+                        <div>
+                            <div class="news-source">${news.source}</div>
+                            <div class="news-title">${news.title}</div>
+                        </div>
+                    </div>
+                    <div class="news-time">${getRelativeTime(news.publishedAt)}</div>
+                    <p class="news-summary">${news.summary}</p>
+                    <div class="news-tags">
+                        ${news.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                    <a href="${news.url}" target="_blank" class="news-link">Read Full Article →</a>
+                </div>
+            `).join('');
+        }
+
+        function filterNews(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            applyFilters();
+        }
+
+        function searchNews() {
+            currentSearch = document.getElementById('searchBox').value.toLowerCase();
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let filtered = allNews;
+
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(n => n.category === currentFilter);
+            }
+
+            if (currentSearch) {
+                filtered = filtered.filter(n => 
+                    n.title.toLowerCase().includes(currentSearch) ||
+                    n.summary.toLowerCase().includes(currentSearch) ||
+                    n.tags.some(tag => tag.toLowerCase().includes(currentSearch))
+                );
+            }
+
+            displayNews(filtered);
+        }
+
+        function getRelativeTime(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        function updateTime() {
+            const timeEl = document.getElementById('updateTime');
+            const now = new Date();
+            timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function refreshNews() {
+            const btn = event.target;
+            btn.style.animation = 'spin 1s linear infinite';
+            setTimeout(() => {
+                btn.style.animation = 'none';
+                updateTime();
+            }, 1000);
+        }
+
+        // Initialize on page load
+        initDashboard();
+        setInterval(updateTime, 60000);
+    </script>
+</body>
+</html>
